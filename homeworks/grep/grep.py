@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+
 COMBAT_MODE = False
 
 
@@ -18,25 +19,29 @@ def grep(lines, params):
         ignore_case(lines, params.pattern)
     elif params.count:
         _count(lines, params.pattern)
+    elif params.line_number:
+        line_number(lines, params.pattern, solo=True)
+    elif params.context:
+        context_n(lines, params.pattern, params.context)
     elif params.pattern:
         pattern_in_line(lines, params.pattern)
 
 
-def pattern_in_line(lines, pattern):
+def pattern_in_line(lines: list, pattern: str):
     """Выводит строки, которые совпадают с шаблоном"""
     for line in lines:
         if pattern in line:
             output(line)
 
 
-def invert(lines, pattern):
+def invert(lines: list, pattern: str):
     """Выводит строки, которые НЕ совпадают с шаблоном"""
     for line in lines:
         if pattern not in line:
             output(line)
 
 
-def ignore_case(lines, pattern):
+def ignore_case(lines: list, pattern: str):
     """При сравнении шаблона не учитывает регистр"""
     pattern = pattern.lower()
     lower_lines = [line.lower() for line in lines]
@@ -45,7 +50,7 @@ def ignore_case(lines, pattern):
             output(lines[index])
 
 
-def _count(lines, pattern):
+def _count(lines: list, pattern: str):
     """Выводит только число строк удовлетворивших шаблону."""
     amount_lines = 0
     for line in lines:
@@ -54,9 +59,25 @@ def _count(lines, pattern):
     output(f"{amount_lines}")
 
 
-def line_number(lines, pattern):
+def line_number(lines: list, pattern: str, solo=False):
     """Перед срокой выводит также и ее номер (строки нумеруются с единицы) в виде '5:строка'"""
-    pass
+    for number, line in enumerate(lines, 1):
+        if solo and pattern in line:
+            output(f"{number}:{line}")
+        else:
+            output(f"{number}-{line}")
+
+
+def context_n(lines: list, pattern: str, n: int):
+    """Помимо строки удовлетворяющей шаблону выводит также и N строк до и N строк после нее если столько есть.
+    Если соседние блоки пересекаются то они объединяются. Если используется флаг line_number, то строки
+    контекста нумеруются так "5-строка"
+    """
+    indexes_from_input = []
+    for index, line in enumerate(lines):
+        if pattern in line:
+            indexes_from_input.append(index)
+    print(indexes_from_input)
 
 
 def parse_args(args):
@@ -115,7 +136,8 @@ def main():
     if COMBAT_MODE:
         grep(sys.stdin.readlines(), params)
     else:
-        grep(['baab', 'bbb', 'ccc', 'A'], params)
+        lines = ['vr', 'baab', 'abbb', 'fc', 'bbb', 'cc']
+        grep(lines, params)
 
 
 if __name__ == '__main__':
