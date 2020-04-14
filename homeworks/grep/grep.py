@@ -9,12 +9,24 @@ def output(line):
 
 
 def grep(lines, params):
+    """Функция фильтрует строки, поступающие на стандартный вход и фильтрует их, согласно параметрам."""
     if COMBAT_MODE:
         lines = [line.strip() for line in lines]
     if params.invert:
         invert(lines, params.pattern)
-    if params.ignore_case:
+    elif params.ignore_case:
         ignore_case(lines, params.pattern)
+    elif params.count:
+        _count(lines, params.pattern)
+    elif params.pattern:
+        pattern_in_line(lines, params.pattern)
+
+
+def pattern_in_line(lines, pattern):
+    """Выводит строки, которые совпадают с шаблоном"""
+    for line in lines:
+        if pattern in line:
+            output(line)
 
 
 def invert(lines, pattern):
@@ -33,8 +45,17 @@ def ignore_case(lines, pattern):
             output(lines[index])
 
 
-def count(lines, pattern):
+def _count(lines, pattern):
     """Выводит только число строк удовлетворивших шаблону."""
+    amount_lines = 0
+    for line in lines:
+        if pattern in line:
+            amount_lines += 1
+    output(f"{amount_lines}")
+
+
+def line_number(lines, pattern):
+    """Перед срокой выводит также и ее номер (строки нумеруются с единицы) в виде '5:строка'"""
     pass
 
 
@@ -95,7 +116,6 @@ def main():
         grep(sys.stdin.readlines(), params)
     else:
         grep(['baab', 'bbb', 'ccc', 'A'], params)
-
 
 
 if __name__ == '__main__':
