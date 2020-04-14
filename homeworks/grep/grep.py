@@ -1,26 +1,41 @@
 import argparse
 import sys
 
+COMBAT_MODE = False
+
 
 def output(line):
     print(line)
 
 
 def grep(lines, params):
+    if COMBAT_MODE:
+        lines = [line.strip() for line in lines]
+    if params.invert:
+        invert(lines, params.pattern)
+    if params.ignore_case:
+        ignore_case(lines, params.pattern)
+
+
+def invert(lines, pattern):
+    """Выводит строки, которые НЕ совпадают с шаблоном"""
     for line in lines:
-        line = line.rstrip()
-        if params.invert:
-            if params.pattern not in line:
-                output(line)
-        if params.ignore_case:
-            lower_line = line.lower()
-            lower_param = params.pattern
-            if lower_param in lower_line:
-                output(line)
-        # if params.count and params.pattern in line:
-        #     output(line)
-        if params.pattern in line:
+        if pattern not in line:
             output(line)
+
+
+def ignore_case(lines, pattern):
+    """При сравнении шаблона не учитывает регистр"""
+    pattern = pattern.lower()
+    lower_lines = [line.lower() for line in lines]
+    for index in range(len(lower_lines)):
+        if pattern in lower_lines[index]:
+            output(lines[index])
+
+
+def count(lines, pattern):
+    """Выводит только число строк удовлетворивших шаблону."""
+    pass
 
 
 def parse_args(args):
@@ -76,7 +91,11 @@ def parse_args(args):
 
 def main():
     params = parse_args(sys.argv[1:])
-    grep(sys.stdin.readlines(), params)
+    if COMBAT_MODE:
+        grep(sys.stdin.readlines(), params)
+    else:
+        grep(['baab', 'bbb', 'ccc', 'A'], params)
+
 
 
 if __name__ == '__main__':

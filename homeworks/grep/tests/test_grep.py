@@ -90,7 +90,7 @@ class GrepPatternTest(TestCase):
 
 class GrepContextTest(TestCase):
 
-    lines = ['vr','baab', 'abbb', 'fc', 'bbb', 'cc']
+    lines = ['vr', 'baab', 'abbb', 'fc', 'bbb', 'cc']
 
     def tearDown(self):
         global lst
@@ -130,7 +130,7 @@ class GrepLineNumbersTest(TestCase):
         lst.clear()
 
     def test_numbers_base(self):
-        params = grep.parse_args(['-n','ab'])
+        params = grep.parse_args(['-n', 'ab'])
         grep.grep(self.lines, params)
         self.assertEqual(lst, ['2:baab', '3:abbb'])
 
