@@ -3,7 +3,7 @@ import sys
 import re
 
 
-COMBAT_MODE = False
+COMBAT_MODE = True
 
 
 def output(line):
@@ -99,10 +99,9 @@ def context_n(lines: list, pattern: str, n: int, area: str = 'every', with_line_
                     context_indexes.append(before_index)
             if area == 'every' or area == 'after':
                 after_index = i + counter
-                if after_index not in pattern_indexes and after_index not in context_indexes and after_index <= len(lines):
+                if after_index not in pattern_indexes and after_index not in context_indexes and after_index <= len(lines):  # noqa
                     context_indexes.append(after_index)
             counter -= 1
-    # TODO хорошо бы реализацию связать с line_number
     if with_line_number:
         for index, line in enumerate(lines):
             if index in context_indexes:
