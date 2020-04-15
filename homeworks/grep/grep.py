@@ -1,5 +1,6 @@
 import argparse
 import sys
+import re
 
 
 COMBAT_MODE = False
@@ -34,10 +35,18 @@ def grep(lines, params):
 
 
 def pattern_in_line(lines: list, pattern: str):
-    """Выводит строки, которые совпадают с шаблоном"""
+    """Выводит строки, которые совпадают с шаблоном.
+    pattern str — строка, описывающая шаблон поиска. В строке могут использоваться специальные сиволы:
+    "?" — один любой символ;
+    "*" — ноль или несколько любых символов (но в рамках одной строки).
+    """
+    pattern = pattern.replace("?", ".")
+    pattern = pattern.replace("*", "\w*")
+    pattern = re.compile(pattern)
     for line in lines:
-        if pattern in line:
+        if pattern.findall(line):
             output(line)
+    return pattern
 
 
 def invert(lines: list, pattern: str):
@@ -77,7 +86,8 @@ def context_n(lines: list, pattern: str, n: int, area: str = 'every', with_line_
     Если соседние блоки пересекаются то они объединяются. Если используется флаг line_number, то строки
     контекста нумеруются так "5-строка"
     """
-    pattern_indexes = [index for index, line in enumerate(lines) if pattern in line]
+    pattern = pattern_in_line([], pattern)
+    pattern_indexes = [index for index, line in enumerate(lines) if pattern.findall(line)]
     context_indexes = []
 
     for i in pattern_indexes:
@@ -92,7 +102,7 @@ def context_n(lines: list, pattern: str, n: int, area: str = 'every', with_line_
                 if after_index not in pattern_indexes and after_index not in context_indexes and after_index <= len(lines):
                     context_indexes.append(after_index)
             counter -= 1
-
+    # TODO хорошо бы реализацию связать с line_number
     if with_line_number:
         for index, line in enumerate(lines):
             if index in context_indexes:
@@ -163,7 +173,7 @@ def main():
     if COMBAT_MODE:
         grep(sys.stdin.readlines(), params)
     else:
-        lines = ['vr', 'baab', 'abbb', 'fc', 'bbb', 'cc']
+        lines = ['baab', 'abbb', 'fc', 'AA']
         grep(lines, params)
 
 
