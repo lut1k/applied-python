@@ -19,10 +19,16 @@ def grep(lines, params):
         ignore_case(lines, params.pattern)
     elif params.count:
         _count(lines, params.pattern)
-    elif params.line_number:
-        line_number(lines, params.pattern, solo=True)
-    elif params.context:
-        context_n(lines, params.pattern, params.context)
+    elif params.line_number and not params.context:
+        line_number(lines, params.pattern)
+    elif params.context and not params.line_number:
+        context_n(lines, params.pattern, params.context, area='every')
+    elif params.before_context:
+        context_n(lines, params.pattern, params.before_context, area='before')
+    elif params.after_context:
+        context_n(lines, params.pattern, params.after_context, area='after')
+    elif params.line_number and params.context:
+        context_n(lines, params.pattern, params.context, with_line_number=True)
     elif params.pattern:
         pattern_in_line(lines, params.pattern)
 
@@ -59,25 +65,46 @@ def _count(lines: list, pattern: str):
     output(f"{amount_lines}")
 
 
-def line_number(lines: list, pattern: str, solo=False):
+def line_number(lines: list, pattern: str):
     """Перед срокой выводит также и ее номер (строки нумеруются с единицы) в виде '5:строка'"""
     for number, line in enumerate(lines, 1):
-        if solo and pattern in line:
+        if pattern in line:
             output(f"{number}:{line}")
-        else:
-            output(f"{number}-{line}")
 
 
-def context_n(lines: list, pattern: str, n: int):
+def context_n(lines: list, pattern: str, n: int, area: str = 'every', with_line_number: bool = False):
     """Помимо строки удовлетворяющей шаблону выводит также и N строк до и N строк после нее если столько есть.
     Если соседние блоки пересекаются то они объединяются. Если используется флаг line_number, то строки
     контекста нумеруются так "5-строка"
     """
-    indexes_from_input = []
-    for index, line in enumerate(lines):
-        if pattern in line:
-            indexes_from_input.append(index)
-    print(indexes_from_input)
+    pattern_indexes = [index for index, line in enumerate(lines) if pattern in line]
+    context_indexes = []
+
+    for i in pattern_indexes:
+        counter = n
+        while counter > 0:
+            if area == 'every' or area == 'before':
+                before_index = i - counter
+                if before_index not in pattern_indexes and before_index not in context_indexes and before_index >= 0:
+                    context_indexes.append(before_index)
+            if area == 'every' or area == 'after':
+                after_index = i + counter
+                if after_index not in pattern_indexes and after_index not in context_indexes and after_index <= len(lines):
+                    context_indexes.append(after_index)
+            counter -= 1
+
+    if with_line_number:
+        for index, line in enumerate(lines):
+            if index in context_indexes:
+                output(f"{index + 1}-{line}")
+            elif index in pattern_indexes:
+                output(f"{index + 1}:{line}")
+
+    if not with_line_number:
+        result_indexes = context_indexes + pattern_indexes
+        result = [lines[index] for index in range(len(lines)) if index in result_indexes]
+        for line in result:
+            output(line)
 
 
 def parse_args(args):
