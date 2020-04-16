@@ -36,26 +36,25 @@ def parse(
     # TODO почитать про определение флагов True or None
     if ignore_files and not ignore_urls and not request_type and not ignore_www and not slow_queries:
         logs = ignores_files(LOGS)
-        return returned_top_5_urls(logs, REGEXP_PATTERN)
+        return top_5_urls(returned_sorted_log_counter(logs))
     elif ignore_urls and not ignore_files and not request_type and not ignore_www and not slow_queries:
         logs = ignores_urls(LOGS, ignore_urls)
-        return returned_top_5_urls(logs, REGEXP_PATTERN)
+        return top_5_urls(returned_sorted_log_counter(logs))
     elif start_at and stop_at and not ignore_files and not ignore_urls and not request_type and not ignore_www and not slow_queries:  # noqa
         logs = limit_by_date(LOGS, start_at, stop_at)
-        return returned_top_5_urls(logs, REGEXP_PATTERN)
+        return top_5_urls(returned_sorted_log_counter(logs))
     elif request_type and not ignore_files and not ignore_urls and not ignore_www and not slow_queries:
         logs = filtered_request_type(LOGS, request_type)
-        return returned_top_5_urls(logs, REGEXP_PATTERN)
+        return top_5_urls(returned_sorted_log_counter(logs))
     elif ignore_www and not ignore_files and not ignore_urls and not request_type and not slow_queries:
         logs = ignored_www(LOGS)
-        return returned_top_5_urls(logs, REGEXP_PATTERN)
+        return top_5_urls(returned_sorted_log_counter(logs))
+    elif slow_queries:
+        logs = without_parameters(LOGS)
+        return top_5_slow_urls(logs, returned_sorted_log_counter(logs))
     else:
-        return returned_top_5_urls(LOGS, REGEXP_PATTERN)
-
-
-def defines_slow_queries():
-    # TODO Реализовать
-    pass
+        logs = without_parameters(LOGS)
+        return top_5_urls(returned_sorted_log_counter(logs))
 
 
 def ignored_www(logs: list):
@@ -122,23 +121,51 @@ def ignores_files(logs: list) -> list:
     return result_list
 
 
-def returned_top_5_urls(filtered_list_with_logs: list, reg_pattern):
+def without_parameters(logs: list) -> list:
+    result_list = []
+    for log in logs:
+        match = re.search(REGEXP_PATTERN, log)
+        if match:
+            result_list.append(log)
+    return result_list
+
+
+def returned_sorted_log_counter(filtered_list_with_logs: list):
     log_counter = {}
     for log in filtered_list_with_logs:
-        match = re.search(reg_pattern, log)
-        if match:
-            full_url = "{host}{path}{params}{anchor}".format(host=match['host'],
-                                                             path=match['url_path'],
-                                                             params=match['url_params'] if match['url_params'] else "",
-                                                             anchor=match['url_anchor'] if match['url_anchor'] else "",
-                                                             )
-            if log_counter.get(full_url):
-                log_counter[full_url] += 1
-            else:
-                log_counter[full_url] = 1
+        match = re.search(REGEXP_PATTERN, log)
+        full_url = "{host}{path}{params}{anchor}".format(host=match['host'],
+                                                         path=match['url_path'],
+                                                         params=match['url_params'] if match['url_params'] else "",
+                                                         anchor=match['url_anchor'] if match['url_anchor'] else "",
+                                                         )
+        if log_counter.get(full_url):
+            log_counter[full_url] += 1
+        else:
+            log_counter[full_url] = 1
     sorted_log_counter = {url: log_counter[url] for url in sorted(log_counter, key=log_counter.get, reverse=True)}
-    return [count for count in sorted_log_counter.values()][:5]
+    return sorted_log_counter
+
+
+def top_5_urls(sorted_log: dict) -> list:
+    return [count for count in sorted_log.values()][:5]
+
+
+def top_5_slow_urls(filtered_list_with_logs: list, sorted_log: dict) -> list:
+    response_time = {}
+    for log in filtered_list_with_logs:
+        match = re.search(REGEXP_PATTERN, log)
+        full_url = "{host}{path}{params}{anchor}".format(host=match['host'],
+                                                         path=match['url_path'],
+                                                         params=match['url_params'] if match['url_params'] else "",
+                                                         anchor=match['url_anchor'] if match['url_anchor'] else "",
+                                                         )
+        if response_time.get(full_url):
+            response_time[full_url] += int(match['response_time'])
+        else:
+            response_time[full_url] = 0
+    return response_time
 
 
 if __name__ == '__main__':
-    print(parse(ignore_www=True))
+    print(parse(slow_queries=True))
