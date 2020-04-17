@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 import datetime
 import re
+from collections import Counter
 
 FILE_WITH_LOGS = 'log.log'
 REGEXP_PATTERN = (r'^\[(?P<day>0[1-9]|[12][0-9]|3[01])/'
@@ -59,7 +60,7 @@ def parse(
         return top_5_urls(logs)
 
 
-def get_full_url(match):
+def get_full_url(match: re.Match) -> str:
     return "{host}{path}{params}{anchor}".format(host=match['host'],
                                                  path=match['url_path'],
                                                  params=match['url_params'] if match['url_params'] else "",
@@ -107,7 +108,7 @@ def limit_by_date(logs: list, started_at=None, stopped_at=None) -> list:
     return result_list
 
 
-def ignores_urls(logs: list, list_with_ignored_urls) -> list:
+def ignores_urls(logs: list, list_with_ignored_urls: list) -> list:
     result_list = []
     for log in logs:
         match = re.search(REGEXP_PATTERN, log)
@@ -128,15 +129,10 @@ def ignores_files(logs: list) -> list:
 
 
 def without_parameters(logs: list) -> list:
-    result_list = []
-    for log in logs:
-        match = re.search(REGEXP_PATTERN, log)
-        if match:
-            result_list.append(log)
-    return result_list
+    return [log for log in logs if re.search(REGEXP_PATTERN, log)]
 
 
-def top_5_urls(filtered_list_with_logs: list):
+def top_5_urls(filtered_list_with_logs: list) -> list:
     log_counter = {}
     for log in filtered_list_with_logs:
         match = re.search(REGEXP_PATTERN, log)
@@ -166,4 +162,4 @@ def top_5_slow_urls(filtered_list_with_logs: list) -> list:
 
 
 if __name__ == '__main__':
-    print(parse(slow_queries=True, request_type='GET'))
+    print(parse())
