@@ -11,24 +11,26 @@ class TextHistory:
     def version(self):
         return self._version
 
-    def _check_is_position_in_length(self, position):
+    def _check_position_value(self, position, length_text):
+        if position == 0:
+            return 0
+        if position is None:
+            return length_text
         if len(self._text) < position or position < 0:
             raise ValueError("Insert position out of string length")
+        return position
 
     def insert(self, text, pos=None):
-        if pos is None:
-            self._text += text
-        else:
-            self._check_is_position_in_length(pos)
-            self._text = self.text[:pos] + text + self.text[pos:]
+        pos = self._check_position_value(pos, len(self._text))
+        self._text = self._text[:pos] + text + self._text[pos:]
         self._version += 1
         return self._version
 
     def replace(self, text, pos=None):
-        if pos is None:
-            self._text += text
-        else:
-            self._check_is_position_in_length(pos)
+        pos = self._check_position_value(pos, len(self._text))
+        self._text = self._text[:pos] + text
+        self._version += 1
+        return self._version
 
     def delete(self, pos, length):
         pass
@@ -50,11 +52,18 @@ class DeleteAction(Action):
     pass
 
 
-h = TextHistory()
-print(h.text)
-print(h.version)
-h.insert('abc', 0)
-print(h.text)
-print(h.version)
-
-
+if __name__ == '__main__':
+    h = TextHistory()
+    print(h.text, h.version)
+    h.insert('abc')
+    print(h.text, h.version)
+    h.insert('abc', pos=10)
+    print(h.text, h.version)
+    # h.replace('abc')
+    # print(h.text, h.version)
+    # h.replace('xyz', pos=2)
+    # print(h.text, h.version)
+    # h.replace('X', pos=2)
+    # print(h.text, h.version)
+    # h.replace('END')
+    # print(h.text, h.version)
