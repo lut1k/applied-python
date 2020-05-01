@@ -22,20 +22,10 @@ class TextHistory:
             raise ValueError("Delete position out of string length")
         return position
 
-    @classmethod
-    def _check_version_value(cls, from_ver, to_ver):
-        if from_ver >= to_ver or from_ver < 0:
-            raise ValueError("Versions value error")
-        return from_ver, to_ver
-
-    def insert(self, text, pos=None, to_version=None):
+    def insert(self, text, pos=None):
         pos = self._check_position_value(pos)
         self._text = self._text[:pos] + text + self._text[pos:]
-        if to_version:
-            type(self)._check_version_value(self._version, to_version)
-            self._version = to_version
-        else:
-            self._version += 1
+        self._version += 1
         return self._version
 
     def replace(self, text, pos=None):
@@ -50,38 +40,20 @@ class TextHistory:
         self._version += 1
         return self._version
 
-    def action(self, act: 'Action'):
-        self._check_version_value(act.from_version, act.to_version)
-        if act.__class__.__name__ == "InsertAction":
-            print('tyt')
-
-    def get_actions(self):
+    def action(self, act):
         pass
 
 
 class Action:
-    def __init__(self, from_version, to_version):
-        self._from_version = from_version
-        self._to_version = to_version
-
-    @property
-    def from_version(self):
-        return self._from_version
-
-    @property
-    def to_version(self):
-        return self._to_version
+    pass
 
 
 class InsertAction(Action):
-    def __init__(self, pos, text, from_version, to_version):
-        self._text = text
+    def __init__(self, pos=0, text='', from_version=0, to_version=0):
         self._pos = pos
-        super().__init__(from_version=from_version, to_version=to_version)
-
-    @property
-    def text(self):
-        return self._text
+        self._text = text
+        self._from_version = from_version
+        self._to_version = to_version
 
 
 class ReplaceAction(Action):
@@ -94,5 +66,5 @@ class DeleteAction(Action):
 
 if __name__ == '__main__':
     h = TextHistory()
-    action = InsertAction(pos=0, text='abc', from_version=1, to_version=10)
+    action = InsertAction(pos=0, text='abc', from_version=0, to_version=10)
     h.action(action)
