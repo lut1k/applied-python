@@ -11,29 +11,34 @@ class TextHistory:
     def version(self):
         return self._version
 
-    def _check_position_value(self, position, length_text):
+    def _check_position_value(self, position, delete_length=None):
         if position == 0:
             return 0
         if position is None:
-            return length_text
+            return len(self._text)
         if len(self._text) < position or position < 0:
             raise ValueError("Insert position out of string length")
+        if delete_length and position + delete_length > len(self._text):
+            raise ValueError("Delete position out of string length")
         return position
 
     def insert(self, text, pos=None):
-        pos = self._check_position_value(pos, len(self._text))
+        pos = self._check_position_value(pos)
         self._text = self._text[:pos] + text + self._text[pos:]
         self._version += 1
         return self._version
 
     def replace(self, text, pos=None):
-        pos = self._check_position_value(pos, len(self._text))
-        self._text = self._text[:pos] + text
+        pos = self._check_position_value(pos)
+        self._text = self._text[:pos] + text + self._text[pos+len(text):]
         self._version += 1
         return self._version
 
     def delete(self, pos, length):
-        pass
+        pos = self._check_position_value(pos, length)
+        self._text = self._text[:pos] + self._text[pos + length:]
+        self._version += 1
+        return self._version
 
 
 class Action:
@@ -54,16 +59,11 @@ class DeleteAction(Action):
 
 if __name__ == '__main__':
     h = TextHistory()
-    print(h.text, h.version)
     h.insert('abc')
     print(h.text, h.version)
-    h.insert('abc', pos=10)
+    # h.delete(pos=10, length=2)
     print(h.text, h.version)
-    # h.replace('abc')
-    # print(h.text, h.version)
-    # h.replace('xyz', pos=2)
-    # print(h.text, h.version)
-    # h.replace('X', pos=2)
-    # print(h.text, h.version)
-    # h.replace('END')
-    # print(h.text, h.version)
+    h.delete(pos=1, length=3)
+    print(h.text, h.version)
+    h.delete(pos=-1, length=2)
+    print(h.text, h.version)
