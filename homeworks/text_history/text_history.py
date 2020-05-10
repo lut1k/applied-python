@@ -22,9 +22,8 @@ class TextHistory:
             raise ValueError("Delete position out of string length")
         return position
 
-    @classmethod
-    def _check_version_value(cls, from_ver, to_ver):
-        if from_ver >= to_ver or from_ver < 0:
+    def _check_version_value(self, from_ver, to_ver=None):
+        if to_ver and from_ver >= to_ver or from_ver < 0:
             raise ValueError("Versions value error")
         return from_ver, to_ver
 
@@ -32,7 +31,7 @@ class TextHistory:
         pos = self._check_position_value(pos)
         self._text = self._text[:pos] + text + self._text[pos:]
         if to_version:
-            type(self)._check_version_value(self._version, to_version)
+            self._check_version_value(from_ver=self._version, to_ver=to_version)
             self._version = to_version
         else:
             self._version += 1
